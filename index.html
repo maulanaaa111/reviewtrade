@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AM Trades - Market Review & Outlook Journal</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-slate-950 text-slate-100 font-sans min-h-screen flex flex-col antialiased selection:bg-emerald-500 selection:text-slate-950">
+
+    <header class="border-b border-slate-800 bg-slate-900/60 backdrop-blur sticky top-0 z-50">
+        <div class="max-w-6xl mx-auto px-4 py-4 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div class="flex items-center space-x-3">
+                <div class="h-10 w-10 rounded-xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400 font-bold text-lg">
+                    📊
+                </div>
+                <div>
+                    <h1 class="text-lg font-bold tracking-tight text-white">AM Trades Journal</h1>
+                    <p class="text-xs text-slate-400">Institutional Framework Review & Outlook</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-2 bg-slate-800/80 p-1 rounded-xl border border-slate-700/50">
+                <button onclick="switchTab('daily')" id="btn-daily" class="px-4 py-2 text-xs font-semibold rounded-lg transition-all bg-emerald-500 text-slate-950 shadow-sm">
+                    Daily Review
+                </button>
+                <button onclick="switchTab('weekly')" id="btn-weekly" class="px-4 py-2 text-xs font-semibold rounded-lg transition-all text-slate-300 hover:text-white">
+                    Weekly Outlook
+                </button>
+                <button onclick="switchTab('history')" id="btn-history" class="px-4 py-2 text-xs font-semibold rounded-lg transition-all text-slate-300 hover:text-white">
+                    History / Saved
+                </button>
+                <button onclick="switchTab('settings')" id="btn-settings" class="px-4 py-2 text-xs font-semibold rounded-lg transition-all text-slate-300 hover:text-white">
+                    ⚙️ Sheets Config
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="flex-grow max-w-4xl w-full mx-auto p-4 sm:p-6 pb-20">
+        
+        <!-- Toast Notification -->
+        <div id="toast" class="fixed bottom-6 right-6 z-50 transform translate-y-20 opacity-0 transition-all duration-300 bg-emerald-500 text-slate-950 px-4 py-3 rounded-xl font-semibold shadow-lg flex items-center gap-2">
+            <span>✅</span> <span id="toast-msg">Berhasil disimpan!</span>
+        </div>
+
+        <!-- DAILY REVIEW FORM SECTION -->
+        <section id="section-daily" class="space-y-6">
+            <div class="bg-slate-900/40 border border-slate-800/80 rounded-2xl p-6 backdrop-blur-sm">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-800 pb-4 mb-6">
+                    <div>
+                        <h2 class="text-xl font-bold text-white">Daily Market Review</h2>
+                        <p class="text-sm text-slate-400">Evaluasi setelah market close & susun skenario harian.</p>
+                    </div>
+                    <div class="flex items-center gap-3 w-full sm:w-auto">
+                        <label class="text-xs text-slate-400 font-medium">Tanggal:</label>
+                        <input type="date" name="daily_date" id="daily-date" class="bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-emerald-500">
+                    </div>
+                </div>
+
+                <form id="form-daily" onsubmit="saveReview(event, 'daily')" class="space-y-6">
+                    <div class="space-y-2">
+                        <label class="block text-sm font-semibold text-emerald-400">1. What is the HTF Narrative? (Narasi Utama)</label>
+                        <p class="text-xs text-slate-400">Bagaimana struktur pergerakan harga di Timeframe tinggi (Daily/4H)? Apakah Ekspansi, Retracement, atau Konsolidasi?</p>
+                        <textarea name="htf_narrative" rows="3" required placeholder="Tulis analisis narasi HTF di sini..." class="w-full bg-slate-950/60 border border-slate-800 rounded-xl p-3 text-sm text-white focus:outline-none focus:border-emerald-500"></textarea>
+                    </div>
+
+                    <div class="space-y-2">
+                        <label class="block text-sm font-semibold text-emerald-400">2. Where is the Draw on Liquidity (DOL)? (Magnet Harga Harian)</label>
+                        <p class="text-xs text-slate-400">Ke mana arah magnet harga paling logis yang diincar selanjutnya? (Buyside / Sellside Liquidity)</p>
+                        <textarea name="dol" rows="3" required placeholder="Tulis target magnet harga..." class="w-full bg-slate-950/60 border border-slate-800 rounded-xl p-3 text-sm text-white focus:outline-none focus:border-emerald-500"></textarea>
+                    </div>
+
+                    <div class="space-y-2">
+                        <label class="block text-sm font-semibold text-emerald-400">3. Where is the Point of Interest (POI)? (Area Reaksi)</label>
+                        <p class="text-xs text-slate-400">Apakah harga perlu masuk FVG/Order Block dulu? Apakah di zona Premium atau Discount?</p>
+                        <textarea name="poi" rows="3" required placeholder="Tulis area POI atau zona harga..." class="w-full bg-slate-950/60 border border-slate-800 rounded-xl p-3 text-sm text-white focus:outline-none focus:border-emerald-500"></textarea>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div class="space-y-2">
+                            <label class="block text-sm font-semibold text-emerald-400">4. Daily Bias</label>
+                            <select name="daily_bias" class="w-full bg-slate-950/60 border border-slate-800 rounded-xl p-3 text-sm text-white focus:outline-none focus:border-emerald-500">
+                                <option value="Bullish">🟢 Bullish</option>
+                                <option value="Bearish">🔴 Bearish</option>
+                                <option value="Neutral / Range">⚪ Neutral / Range</option>
+                            </select>
+                        </div>
+                        <div class="space-y-2">
+                            <label class="block text-sm font-semibold text-emerald-400">Chart Link (TradingView / Screenshot URL)</label>
+                            <input type="url" name="chart_url" placeholder="https://www.tradingview.com/x/..." class="w-full bg-slate-950/60 border border-slate-800 rounded-xl p-3 text-sm text-white focus:outline-none focus:border-emerald-500">
+                        </div>
+                    </div>
+
+                    <div class="space-y-2">
+                        <label class="block text-sm font-semibold text-emerald-400">5. Gameplan & Invalidation (Skenario & Batas Batal)</label>
+                        <p class="text-xs text-slate-400">Konfirmasi ideal sebelum entry & kondisi invalidasi analisamu.</p>
+                        <textarea name="gameplan" rows="3" required placeholder="Tulis skenario A, skenario B, dan invalidasi..." class="w-full bg-slate-950/60 border border-slate-800 rounded-xl p-3 text-sm text-white focus:outline-none focus:border-emerald-500"></textarea>
+                    </div>
+
+                    <div class="space-y-2">
+                        <label class="block text-sm font-semibold text-emerald-400">6. Post-Market Self-Audit (Evaluasi Diri)</label>
+                        <p class="text-xs text-slate-400">Apakah pergerakan sesuai narasi? Ada bagian yang terlewat atau FOMO?</p>
+                        <textarea name="audit" rows="3" placeholder="Tulis catatan evaluasi psikologi & disiplin..." class="w-full bg-slate-950/60 border border-slate-800 rounded-xl p-3 text-sm text-white focus:outline-none focus:border-emerald-500"></textarea>
+                    </div>
+
+                    <div class="pt-4 flex justify-end">
+                        <button type="submit" class="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-semibold px-6 py-3 rounded-xl transition-all shadow-lg shadow-emerald-500/10 cursor-pointer">
+                            Simpan Daily Review
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </section>
+
+        <!-- WEEKLY OUTLOOK FORM SECTION -->
+        <section id="section-weekly" class="space-y-6 hidden">
+            <div class="bg-slate-900/40 border border-slate-800/80 rounded-2xl p-6 backdrop-blur-sm">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-800 pb-4 mb-6">
+                    <div>
+                        <h2 class="text-xl font-bold text-white">Weekly Market Review & Outlook</h2>
+                        <p class="text-sm text-slate-400">Diisi setiap akhir pekan untuk memetakan arah besar seminggu ke depan.</p>
+                    </div>
+                    <div class="flex items-center gap-3 w-full sm:w-auto">
+                        <label class="text-xs text-slate-400 font-medium">Periode Minggu:</label>
+                        <input type="text" name="weekly_period" id="weekly-period" placeholder="Contoh: Minggu ke-3 Oktober 2026" class="bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-cyan-500">
+                    </div>
+                </div>
+
+                <form id="form-weekly" onsubmit="saveReview(event, 'weekly')" class="space-y-6">
+                    
+                    <div class="space-y-2">
+                        <label class="block text-sm font-semibold text-cyan-400">1. Weekly Candle Profiling (Evaluasi Penutupan Candle)</label>
+                        <p class="text-xs text-slate-400">Bagaimana penutupan Weekly candle sebelumnya? Apakah Expansion, Wick Rejection, atau Doji?</p>
+                        <textarea name="weekly_profiling" rows="3" required placeholder="Analisa penutupan candle mingguan..." class="w-full bg-slate-950/60 border border-slate-800 rounded-xl p-3 text-sm text-white focus:outline-none focus:border-cyan-500"></textarea>
+                    </div>
+
+                    <div class="space-y-2">
+                        <label class="block text-sm font-semibold text-cyan-400">2. HTF Draw on Liquidity (DOL) for Next Week</label>
+                        <p class="text-xs text-slate-400">Ke mana arah magnet harga mingguan yang paling logis dituju?</p>
+                        <textarea name="weekly_dol" rows="3" required placeholder="Target magnet harga mingguan..." class="w-full bg-slate-950/60 border border-slate-800 rounded-xl p-3 text-sm text-white focus:outline-none focus:border-cyan-500"></textarea>
+                    </div>
+
+                    <div class="space-y-2">
+                        <label class="block text-sm font-semibold text-cyan-400">3. Key Levels & Institutional Arrays</label>
+                        <p class="text-xs text-slate-400">Di mana area FVG atau Order Block mingguan yang masih fresh? Zona Premium atau Discount?</p>
+                        <textarea name="weekly_arrays" rows="3" required placeholder="Tulis area kunci mingguan..." class="w-full bg-slate-950/60 border border-slate-800 rounded-xl p-3 text-sm text-white focus:outline-none focus:border-cyan-500"></textarea>
+                    </div>
+
+                    <div class="space-y-2">
+                        <label class="block text-sm font-semibold text-cyan-400">4. High-Impact News & Calendar Awareness</label>
+                        <p class="text-xs text-slate-400">Berita penting apa saja minggu ini (CPI, NFP, FOMC)? Kapan potensi Judas Swing / Weekly High-Low?</p>
+                        <textarea name="weekly_news" rows="3" required placeholder="Daftar rilis berita & jadwal penting..." class="w-full bg-slate-950/60 border border-slate-800 rounded-xl p-3 text-sm text-white focus:outline-none focus:border-cyan-500"></textarea>
+                    </div>
+
+                    <div class="space-y-2">
+                        <label class="block text-sm font-semibold text-cyan-400">5. Weekly Gameplan & Scenarios</label>
+                        <p class="text-xs text-slate-400">Skenario utama awal minggu & skenario invalidasi jika bias meleset.</p>
+                        <textarea name="weekly_gameplan" rows="3" required placeholder="Skenario A & Invalidation Plan..." class="w-full bg-slate-950/60 border border-slate-800 rounded-xl p-3 text-sm text-white focus:outline-none focus:border-cyan-500"></textarea>
+                    </div>
+
+                    <div class="space-y-2">
+                        <label class="block text-sm font-semibold text-cyan-400">Chart Link (TradingView / Screenshot URL)</label>
+                        <input type="url" name="chart_url" placeholder="https://www.tradingview.com/x/..." class="w-full bg-slate-950/60 border border-slate-800 rounded-xl p-3 text-sm text-white focus:outline-none focus:border-cyan-500">
+                    </div>
+
+                    <div class="space-y-2">
+                        <label class="block text-sm font-semibold text-cyan-400">6. Weekly Self-Audit & Performance Review</label>
+                        <p class="text-xs text-slate-400">Evaluasi akurasi bias minggu lalu & kedisiplinan eksekusi.</p>
+                        <textarea name="weekly_audit" rows="3" placeholder="Catatan evaluasi mingguan..." class="w-full bg-slate-950/60 border border-slate-800 rounded-xl p-3 text-sm text-white focus:outline-none focus:border-cyan-500"></textarea>
+                    </div>
+
+                    <div class="pt-4 flex justify-end">
+                        <button type="submit" class="bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-semibold px-6 py-3 rounded-xl transition-all shadow-lg shadow-cyan-500/10 cursor-pointer">
+                            Simpan Weekly Outlook
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </section>
+
+        <!-- HISTORY & BACKUP SECTION -->
+        <section id="section-history" class="space-y-6 hidden">
+            <div class="bg-slate-900/40 border border-slate-800/80 rounded-2xl p-6 backdrop-blur-sm space-y-6">
+                
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-800 pb-4">
+                    <div>
+                        <h2 class="text-xl font-bold text-white">Riwayat Catatan Review</h2>
+                        <p class="text-sm text-slate-400">Kelola, cari, dan cadangkan data review jurnal kamu.</p>
+                    </div>
+                    <div class="flex flex-wrap gap-2">
+                        <button onclick="exportToCSV()" class="bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-400 border border-emerald-500/30 px-3 py-2 rounded-xl text-xs font-semibold transition-all flex items-center gap-1.5">
+                            📊 Export CSV (Google Sheets)
+                        </button>
+                        <button onclick="exportData()" class="bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-slate-200 border border-slate-700 px-3 py-2 rounded-xl transition-all flex items-center gap-1.5">
+                            📥 Backup Data (JSON)
+                        </button>
+                        <label class="bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-slate-200 border border-slate-700 px-3 py-2 rounded-xl transition-all cursor-pointer flex items-center gap-1.5">
+                            📤 Restore Data
+                            <input type="file" id="import-file" accept=".json" onchange="importData(event)" class="hidden">
+                        </label>
+                        <button onclick="clearHistory()" class="bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/30 px-3 py-2 rounded-xl text-xs font-semibold transition-all">
+                            Hapus Semua
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Search Bar -->
+                <div>
+                    <input type="text" id="search-input" oninput="loadHistory()" placeholder="🔍 Cari catatan berdasarkan kata kunci atau tanggal..." class="w-full bg-slate-950/80 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-indigo-500">
+                </div>
+
+                <div id="history-container" class="space-y-4">
+                    <!-- Dynamic history injected by JS -->
+                </div>
+            </div>
+        </section>
+
+        <!-- GOOGLE SHEETS SETTINGS SECTION -->
+        <section id="section-settings" class="space-y-6 hidden">
+            <div class="bg-slate-900/40 border border-slate-800/80 rounded-2xl p-6 backdrop-blur-sm space-y-6">
+                <div class="border-b border-slate-800 pb-4">
+                    <h2 class="text-xl font-bold text-white">Integrasi Otomatis Google Sheets</h2>
+                    <p class="text-sm text-slate-400">Kirim data review langsung ke Google Sheets secara real-time tiap kali disimpan.</p>
+                </div>
+
+                <div class="space-y-4 text-xs text-slate-300 bg-slate-950/60 p-4 rounded-xl border border-slate-800">
+                    <h3 class="font-bold text-emerald-400 text-sm">💡 Cara Menghubungkan Google Sheets:</h3>
+                    <ol class="list-decimal list-inside space-y-2 text-slate-300">
+                        <li>Buka Google Sheets baru di <a href="https://sheets.new" target="_blank" class="text-emerald-400 underline">sheets.new</a>.</li>
+                        <li>Klik menu <strong>Extensions (Ekstensi)</strong> &gt; <strong>Apps Script</strong>.</li>
+                        <li>Hapus semua kode lama, lalu tempel (*paste*) kode Apps Script di bawah ini:</li>
+                    </ol>
+                    <pre class="bg-slate-900 border border-slate-800 rounded-lg p-3 text-[11px] text-emerald-300 font-mono overflow-x-auto select-all">
+function doPost(e) {
+  var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
+  var data = JSON.parse(e.postData.contents);
+  
+  if (sheet.getLastRow() === 0) {
+    sheet.appendRow(["ID", "Type", "Timestamp", "Detail 1", "Detail 2", "Detail 3", "Detail 4 / Bias", "Chart Link", "Gameplan", "Audit"]);
+  }
+  
+  sheet.appendRow([
+    data.id || '',
+    data.type || '',
+    data.timestamp || '',
+    data.htf_narrative || data.weekly_profiling || '',
+    data.dol || data.weekly_dol || '',
+    data.poi || data.weekly_arrays || '',
+    data.daily_bias || data.weekly_news || '',
+    data.chart_url || '',
+    data.gameplan || data.weekly_gameplan || '',
+    data.audit || data.weekly_audit || ''
+  ]);
+  
+  return ContentService.createTextOutput("Success").setMimeType(ContentService.MimeType.TEXT);
+}</pre>
+                    <ol start="4" class="list-decimal list-inside space-y-2 text-slate-300">
+                        <li>Klik **Deploy** &gt; **New deployment**.</li>
+                        <li>Pilih type **Web app**. Pada **Who has access**, pilih **Anyone** (Siapa saja).</li>
+                        <li>Klik **Deploy**, lalu *copy* URL Web App yang dihasilkan dan tempelkan pada kolom di bawah ini:</li>
+                    </ol>
+                </div>
+
+                <div class="space-y-3">
+                    <label class="block text-xs font-semibold text-emerald-400">Google Apps Script Web App URL:</label>
+                    <input type="url" id="sheets-url-input" placeholder="https://script.google.com/macros/s/.../exec" class="w-full bg-slate-950/80 border border-slate-800 rounded-xl p-3 text-xs text-white focus:outline-none focus:border-emerald-500">
+                    <div class="flex justify-end">
+                        <button onclick="saveSheetsUrl()" class="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-semibold px-5 py-2.5 rounded-xl text-xs transition-all">
+                            Simpan Konfigurasi Sheets
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <script>
+        // Set default date to today
+        document.getElementById('daily-date').valueAsDate = new Date();
+        document.getElementById('weekly-period').value = "Minggu Ini (" + new Date().toLocaleDateString() + ")";
+
+        // Load Sheets Web App URL if exists
+        document.getElementById('sheets-url-input').value = localStorage.getItem('am_trades_sheets_url') || '';
+
+        function switchTab(tab) {
+            ['daily', 'weekly', 'history', 'settings'].forEach(t => {
+                const el = document.getElementById(`section-${t}`);
+                if (el) el.classList.add('hidden');
+                const btn = document.getElementById(`btn-${t}`);
+                if (btn) btn.className = "px-4 py-2 text-xs font-semibold rounded-lg transition-all text-slate-300 hover:text-white";
+            });
+
+            document.getElementById(`section-${tab}`).classList.remove('hidden');
+            const activeBtn = document.getElementById(`btn-${tab}`);
+            if (tab === 'daily') activeBtn.className = "px-4 py-2 text-xs font-semibold rounded-lg transition-all bg-emerald-500 text-slate-950 shadow-sm";
+            else if (tab === 'weekly') activeBtn.className = "px-4 py-2 text-xs font-semibold rounded-lg transition-all bg-cyan-500 text-slate-950 shadow-sm";
+            else if (tab === 'history') {
+                activeBtn.className = "px-4 py-2 text-xs font-semibold rounded-lg transition-all bg-indigo-500 text-white shadow-sm";
+                loadHistory();
+            } else if (tab === 'settings') {
+                activeBtn.className = "px-4 py-2 text-xs font-semibold rounded-lg transition-all bg-amber-500 text-slate-950 shadow-sm";
+            }
+        }
+
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            document.getElementById('toast-msg').innerText = msg;
+            toast.classList.remove('translate-y-20', 'opacity-0');
+            setTimeout(() => {
+                toast.classList.add('translate-y-20', 'opacity-0');
+            }, 3000);
+        }
+
+        function saveSheetsUrl() {
+            const url = document.getElementById('sheets-url-input').value.trim();
+            localStorage.setItem('am_trades_sheets_url', url);
+            showToast('URL Google Sheets berhasil disimpan!');
+        }
+
+        async function sendToGoogleSheets(data) {
+            const sheetsUrl = localStorage.getItem('am_trades_sheets_url');
+            if (!sheetsUrl) return;
+
+            try {
+                await fetch(sheetsUrl, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+            } catch (err) {
+                console.error("Gagal mengirim data ke Google Sheets:", err);
+            }
+        }
+
+        function saveReview(event, type) {
+            event.preventDefault();
+            const form = event.target;
+            const formData = new FormData(form);
+            const data = Object.fromEntries(formData.entries());
+            
+            data.type = type;
+            data.id = 'review_' + Date.now();
+            data.timestamp = type === 'daily' ? (data.daily_date || new Date().toISOString().split('T')[0]) : data.weekly_period;
+
+            let history = JSON.parse(localStorage.getItem('am_trades_history') || '[]');
+            history.unshift(data);
+            localStorage.setItem('am_trades_history', JSON.stringify(history));
+
+            // Sync with Google Sheets if URL provided
+            sendToGoogleSheets(data);
+
+            showToast(type === 'daily' ? 'Daily Review disimpan & disinkronkan!' : 'Weekly Outlook disimpan & disinkronkan!');
+            form.reset();
+            if (type === 'daily') document.getElementById('daily-date').valueAsDate = new Date();
+        }
+
+        function exportToCSV() {
+            const history = JSON.parse(localStorage.getItem('am_trades_history') || '[]');
+            if (history.length === 0) {
+                showToast('Tidak ada data untuk diexport');
+                return;
+            }
+
+            const headers = ["ID", "Tipe", "Tanggal/Periode", "Narrative/Profiling", "DOL", "POI/Arrays", "Bias/News", "Chart Link", "Gameplan", "Self Audit"];
+            const rows = history.map(item => [
+                `"${item.id || ''}"`,
+                `"${item.type || ''}"`,
+                `"${item.timestamp || ''}"`,
+                `"${(item.htf_narrative || item.weekly_profiling || '').replace(/"/g, '""')}"`,
+                `"${(item.dol || item.weekly_dol || '').replace(/"/g, '""')}"`,
+                `"${(item.poi || item.weekly_arrays || '').replace(/"/g, '""')}"`,
+                `"${(item.daily_bias || item.weekly_news || '').replace(/"/g, '""')}"`,
+                `"${(item.chart_url || '').replace(/"/g, '""')}"`,
+                `"${(item.gameplan || item.weekly_gameplan || '').replace(/"/g, '""')}"`,
+                `"${(item.audit || item.weekly_audit || '').replace(/"/g, '""')}"`
+            ]);
+
+            const csvContent = "data:text/csv;charset=utf-8,\uFEFF" + [headers.join(","), ...rows.map(e => e.join(","))].join("\n");
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", `AM_Trades_Journal_${new Date().toISOString().split('T')[0]}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            showToast('Berhasil export ke file CSV/Sheets!');
+        }
+
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            document.getElementById('toast-msg').innerText = msg;
+            toast.classList.remove('translate-y-20', 'opacity-0');
+            setTimeout(() => {
+                toast.classList.add('translate-y-20', 'opacity-0');
+            }, 3000);
+        }
+
+        function saveReview(event, type) {
+            event.preventDefault();
+            const form = event.target;
+            const formData = new FormData(form);
+            const data = Object.fromEntries(formData.entries());
+            
+            data.type = type;
+            data.id = 'review_' + Date.now();
+            data.timestamp = type === 'daily' ? (data.daily_date || new Date().toISOString().split('T')[0]) : data.weekly_period;
+
+            let history = JSON.parse(localStorage.getItem('am_trades_history') || '[]');
+            history.unshift(data);
+            localStorage.setItem('am_trades_history', JSON.stringify(history));
+
+            showToast(type === 'daily' ? 'Daily Review berhasil disimpan!' : 'Weekly Outlook berhasil disimpan!');
+            form.reset();
+            if (type === 'daily') document.getElementById('daily-date').valueAsDate = new Date();
+        }
+
+        function loadHistory() {
+            const container = document.getElementById('history-container');
+            const history = JSON.parse(localStorage.getItem('am_trades_history') || '[]');
+            const query = (document.getElementById('search-input')?.value || '').toLowerCase();
+
+            const filteredHistory = history.filter(item => {
+                return JSON.stringify(item).toLowerCase().includes(query);
+            });
+
+            if (filteredHistory.length === 0) {
+                container.innerHTML = `<div class="text-center py-12 text-slate-500 text-sm">Belum ada catatan review yang sesuai.</div>`;
+                return;
+            }
+
+            container.innerHTML = filteredHistory.map((item, index) => {
+                const isDaily = item.type === 'daily';
+                const badgeColor = isDaily ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30' : 'bg-cyan-500/10 text-cyan-400 border-cyan-500/30';
+                
+                return `
+                    <div class="bg-slate-950/60 border border-slate-800 rounded-2xl p-5 space-y-3">
+                        <div class="flex items-center justify-between border-b border-slate-900 pb-3">
+                            <div class="flex items-center gap-3">
+                                <span class="px-2.5 py-1 rounded-lg text-xs font-bold border ${badgeColor}">
+                                    ${isDaily ? 'DAILY REVIEW' : 'WEEKLY OUTLOOK'}
+                                </span>
+                                <span class="text-sm font-medium text-white">${item.timestamp}</span>
+                            </div>
+                            <button onclick="deleteItem(${index})" class="text-xs text-slate-500 hover:text-red-400 transition-colors">Hapus</button>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs text-slate-300">
+                            ${isDaily ? `
+                                <div><strong class="text-slate-400">Narrative:</strong> ${escapeHtml(item.htf_narrative || '-')}</div>
+                                <div><strong class="text-slate-400">DOL:</strong> ${escapeHtml(item.dol || '-')}</div>
+                                <div><strong class="text-slate-400">POI:</strong> ${escapeHtml(item.poi || '-')}</div>
+                                <div><strong class="text-slate-400">Bias:</strong> ${escapeHtml(item.daily_bias || '-')}</div>
+                                <div class="md:col-span-2"><strong class="text-slate-400">Gameplan:</strong> ${escapeHtml(item.gameplan || '-')}</div>
+                                ${item.audit ? `<div class="md:col-span-2"><strong class="text-slate-400">Self-Audit:</strong> ${escapeHtml(item.audit)}</div>` : ''}
+                            ` : `
+                                <div><strong class="text-slate-400">Profiling:</strong> ${escapeHtml(item.weekly_profiling || '-')}</div>
+                                <div><strong class="text-slate-400">Weekly DOL:</strong> ${escapeHtml(item.weekly_dol || '-')}</div>
+                                <div><strong class="text-slate-400">Arrays:</strong> ${escapeHtml(item.weekly_arrays || '-')}</div>
+                                <div><strong class="text-slate-400">News:</strong> ${escapeHtml(item.weekly_news || '-')}</div>
+                                <div class="md:col-span-2"><strong class="text-slate-400">Gameplan:</strong> ${escapeHtml(item.weekly_gameplan || '-')}</div>
+                                ${item.weekly_audit ? `<div class="md:col-span-2"><strong class="text-slate-400">Self-Audit:</strong> ${escapeHtml(item.weekly_audit)}</div>` : ''}
+                            `}
+                            ${item.chart_url ? `
+                                <div class="md:col-span-2 pt-2 border-t border-slate-900 flex items-center justify-between">
+                                    <span class="text-slate-400 font-semibold">Chart Link:</span>
+                                    <a href="${escapeHtml(item.chart_url)}" target="_blank" rel="noopener noreferrer" class="text-emerald-400 hover:underline flex items-center gap-1">
+                                        🔗 Buka Chart TradingView ↗
+                                    </a>
+                                </div>
+                            ` : ''}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function deleteItem(index) {
+            let history = JSON.parse(localStorage.getItem('am_trades_history') || '[]');
+            history.splice(index, 1);
+            localStorage.setItem('am_trades_history', JSON.stringify(history));
+            loadHistory();
+            showToast('Catatan berhasil dihapus');
+        }
+
+        function clearHistory() {
+            if (!confirm('Apakah kamu yakin ingin menghapus semua riwayat catatan?')) return;
+            localStorage.removeItem('am_trades_history');
+            loadHistory();
+            showToast('Semua riwayat dibersihkan');
+        }
+
+        function exportData() {
+            const history = localStorage.getItem('am_trades_history') || '[]';
+            const blob = new Blob([history], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `AM_Trades_Journal_Backup_${new Date().toISOString().split('T')[0]}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+            showToast('Data berhasil diexport!');
+        }
+
+        function importData(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    if (Array.isArray(data)) {
+                        localStorage.setItem('am_trades_history', JSON.stringify(data));
+                        loadHistory();
+                        showToast('Data berhasil di-restore!');
+                    } else {
+                        showToast('Format file JSON tidak valid');
+                    }
+                } catch (err) {
+                    showToast('Gagal membaca file JSON');
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        function escapeHtml(text) {
+            if (!text) return '';
+            return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+        }
+    </script>
+</body>
+</html>
