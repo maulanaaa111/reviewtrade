@@ -249,8 +249,13 @@
 function doPost(e) {
   try {
     var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
-    var data = JSON.parse(e.postData.contents);
+    var contents = e.postData ? e.postData.contents : null;
+    if (!contents) {
+      return ContentService.createTextOutput("No payload received");
+    }
+    var data = JSON.parse(contents);
     
+    // Jika sheet masih kosong, buat Header
     if (sheet.getLastRow() === 0) {
       sheet.appendRow(["ID", "Type", "Timestamp / Date", "HTF Narrative / Profiling", "DOL", "POI / Arrays", "Bias / News", "Chart Link", "Gameplan", "Self Audit"]);
     }
@@ -342,7 +347,7 @@ function doPost(e) {
             if (!sheetsUrl) return;
 
             try {
-                // Fetch with text/plain to prevent CORS issues with Google Apps Script
+                // Menggunakan mode no-cors dan stringify payload agar aman dari blokir CORS Google Apps Script
                 await fetch(sheetsUrl, {
                     method: 'POST',
                     mode: 'no-cors',
@@ -368,12 +373,12 @@ function doPost(e) {
             history.unshift(data);
             localStorage.setItem('am_trades_history', JSON.stringify(history));
 
-            // Sync with Google Sheets if URL provided
+            // Sync dengan Google Sheets jika URL diisi
             sendToGoogleSheets(data);
 
             const hasSheets = !!localStorage.getItem('am_trades_sheets_url');
             const successMsg = type === 'daily' 
-                ? (hasSheets ? 'Daily Review disimpan & terikirim ke Sheets!' : 'Daily Review disimpan di lokal!') 
+                ? (hasSheets ? 'Daily Review disimpan & terkirim ke Sheets!' : 'Daily Review disimpan di lokal!') 
                 : (hasSheets ? 'Weekly Outlook disimpan & terkirim ke Sheets!' : 'Weekly Outlook disimpan di lokal!');
 
             showToast(successMsg);
