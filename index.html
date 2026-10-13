@@ -247,32 +247,36 @@
                     </ol>
                     <pre class="bg-slate-900 border border-slate-800 rounded-lg p-3 text-[11px] text-emerald-300 font-mono overflow-x-auto select-all">
 function doPost(e) {
-  var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
-  var data = JSON.parse(e.postData.contents);
-  
-  if (sheet.getLastRow() === 0) {
-    sheet.appendRow(["ID", "Type", "Timestamp", "Detail 1", "Detail 2", "Detail 3", "Detail 4 / Bias", "Chart Link", "Gameplan", "Audit"]);
+  try {
+    var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
+    var data = JSON.parse(e.postData.contents);
+    
+    if (sheet.getLastRow() === 0) {
+      sheet.appendRow(["ID", "Type", "Timestamp / Date", "HTF Narrative / Profiling", "DOL", "POI / Arrays", "Bias / News", "Chart Link", "Gameplan", "Self Audit"]);
+    }
+    
+    sheet.appendRow([
+      data.id || '',
+      data.type || '',
+      data.timestamp || '',
+      data.htf_narrative || data.weekly_profiling || '',
+      data.dol || data.weekly_dol || '',
+      data.poi || data.weekly_arrays || '',
+      data.daily_bias || data.weekly_news || '',
+      data.chart_url || '',
+      data.gameplan || data.weekly_gameplan || '',
+      data.audit || data.weekly_audit || ''
+    ]);
+    
+    return ContentService.createTextOutput("Success").setMimeType(ContentService.MimeType.TEXT);
+  } catch(error) {
+    return ContentService.createTextOutput("Error: " + error.toString()).setMimeType(ContentService.MimeType.TEXT);
   }
-  
-  sheet.appendRow([
-    data.id || '',
-    data.type || '',
-    data.timestamp || '',
-    data.htf_narrative || data.weekly_profiling || '',
-    data.dol || data.weekly_dol || '',
-    data.poi || data.weekly_arrays || '',
-    data.daily_bias || data.weekly_news || '',
-    data.chart_url || '',
-    data.gameplan || data.weekly_gameplan || '',
-    data.audit || data.weekly_audit || ''
-  ]);
-  
-  return ContentService.createTextOutput("Success").setMimeType(ContentService.MimeType.TEXT);
 }</pre>
                     <ol start="4" class="list-decimal list-inside space-y-2 text-slate-300">
-                        <li>Klik **Deploy** &gt; **New deployment**.</li>
-                        <li>Pilih type **Web app**. Pada **Who has access**, pilih **Anyone** (Siapa saja).</li>
-                        <li>Klik **Deploy**, lalu *copy* URL Web App yang dihasilkan dan tempelkan pada kolom di bawah ini:</li>
+                        <li>Klik <strong>Deploy</strong> &gt; <strong>New deployment</strong>.</li>
+                        <li>Pilih type <strong>Web app</strong>. Pada <strong>Who has access</strong>, wajib pilih <strong>Anyone</strong> (Siapa saja).</li>
+                        <li>Klik <strong>Deploy</strong>, izinkan akses akun Google, lalu *copy* URL Web App yang dihasilkan dan tempelkan pada kolom di bawah ini.</li>
                     </ol>
                 </div>
 
@@ -280,7 +284,7 @@ function doPost(e) {
                     <label class="block text-xs font-semibold text-emerald-400">Google Apps Script Web App URL:</label>
                     <input type="url" id="sheets-url-input" placeholder="https://script.google.com/macros/s/.../exec" class="w-full bg-slate-950/80 border border-slate-800 rounded-xl p-3 text-xs text-white focus:outline-none focus:border-emerald-500">
                     <div class="flex justify-end">
-                        <button onclick="saveSheetsUrl()" class="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-semibold px-5 py-2.5 rounded-xl text-xs transition-all">
+                        <button onclick="saveSheetsUrl()" class="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-semibold px-5 py-2.5 rounded-xl text-xs transition-all cursor-pointer">
                             Simpan Konfigurasi Sheets
                         </button>
                     </div>
@@ -293,7 +297,7 @@ function doPost(e) {
     <script>
         // Set default date to today
         document.getElementById('daily-date').valueAsDate = new Date();
-        document.getElementById('weekly-period').value = "Minggu Ini (" + new Date().toLocaleDateString() + ")";
+        document.getElementById('weekly-period').value = "Minggu Ini (" + new Date().toLocaleDateString('id-ID') + ")";
 
         // Load Sheets Web App URL if exists
         document.getElementById('sheets-url-input').value = localStorage.getItem('am_trades_sheets_url') || '';
@@ -338,10 +342,11 @@ function doPost(e) {
             if (!sheetsUrl) return;
 
             try {
+                // Fetch with text/plain to prevent CORS issues with Google Apps Script
                 await fetch(sheetsUrl, {
                     method: 'POST',
                     mode: 'no-cors',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
                     body: JSON.stringify(data)
                 });
             } catch (err) {
@@ -366,9 +371,21 @@ function doPost(e) {
             // Sync with Google Sheets if URL provided
             sendToGoogleSheets(data);
 
-            showToast(type === 'daily' ? 'Daily Review disimpan & disinkronkan!' : 'Weekly Outlook disimpan & disinkronkan!');
+            const hasSheets = !!localStorage.getItem('am_trades_sheets_url');
+            const successMsg = type === 'daily' 
+                ? (hasSheets ? 'Daily Review disimpan & terikirim ke Sheets!' : 'Daily Review disimpan di lokal!') 
+                : (hasSheets ? 'Weekly Outlook disimpan & terkirim ke Sheets!' : 'Weekly Outlook disimpan di lokal!');
+
+            showToast(successMsg);
             form.reset();
             if (type === 'daily') document.getElementById('daily-date').valueAsDate = new Date();
+        }
+
+        function cleanCSVCell(str) {
+            if (!str) return '""';
+            // Escapes internal double quotes and wraps string in quotes
+            const escaped = str.toString().replace(/"/g, '""');
+            return `"${escaped}"`;
         }
 
         function exportToCSV() {
@@ -380,55 +397,29 @@ function doPost(e) {
 
             const headers = ["ID", "Tipe", "Tanggal/Periode", "Narrative/Profiling", "DOL", "POI/Arrays", "Bias/News", "Chart Link", "Gameplan", "Self Audit"];
             const rows = history.map(item => [
-                `"${item.id || ''}"`,
-                `"${item.type || ''}"`,
-                `"${item.timestamp || ''}"`,
-                `"${(item.htf_narrative || item.weekly_profiling || '').replace(/"/g, '""')}"`,
-                `"${(item.dol || item.weekly_dol || '').replace(/"/g, '""')}"`,
-                `"${(item.poi || item.weekly_arrays || '').replace(/"/g, '""')}"`,
-                `"${(item.daily_bias || item.weekly_news || '').replace(/"/g, '""')}"`,
-                `"${(item.chart_url || '').replace(/"/g, '""')}"`,
-                `"${(item.gameplan || item.weekly_gameplan || '').replace(/"/g, '""')}"`,
-                `"${(item.audit || item.weekly_audit || '').replace(/"/g, '""')}"`
+                cleanCSVCell(item.id),
+                cleanCSVCell(item.type),
+                cleanCSVCell(item.timestamp),
+                cleanCSVCell(item.htf_narrative || item.weekly_profiling),
+                cleanCSVCell(item.dol || item.weekly_dol),
+                cleanCSVCell(item.poi || item.weekly_arrays),
+                cleanCSVCell(item.daily_bias || item.weekly_news),
+                cleanCSVCell(item.chart_url),
+                cleanCSVCell(item.gameplan || item.weekly_gameplan),
+                cleanCSVCell(item.audit || item.weekly_audit)
             ]);
 
-            const csvContent = "data:text/csv;charset=utf-8,\uFEFF" + [headers.join(","), ...rows.map(e => e.join(","))].join("\n");
-            const encodedUri = encodeURI(csvContent);
+            const csvContent = "\uFEFF" + [headers.join(","), ...rows.map(e => e.join(","))].join("\n");
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
             const link = document.createElement("a");
-            link.setAttribute("href", encodedUri);
+            link.setAttribute("href", url);
             link.setAttribute("download", `AM_Trades_Journal_${new Date().toISOString().split('T')[0]}.csv`);
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
-            showToast('Berhasil export ke file CSV/Sheets!');
-        }
-
-        function showToast(msg) {
-            const toast = document.getElementById('toast');
-            document.getElementById('toast-msg').innerText = msg;
-            toast.classList.remove('translate-y-20', 'opacity-0');
-            setTimeout(() => {
-                toast.classList.add('translate-y-20', 'opacity-0');
-            }, 3000);
-        }
-
-        function saveReview(event, type) {
-            event.preventDefault();
-            const form = event.target;
-            const formData = new FormData(form);
-            const data = Object.fromEntries(formData.entries());
-            
-            data.type = type;
-            data.id = 'review_' + Date.now();
-            data.timestamp = type === 'daily' ? (data.daily_date || new Date().toISOString().split('T')[0]) : data.weekly_period;
-
-            let history = JSON.parse(localStorage.getItem('am_trades_history') || '[]');
-            history.unshift(data);
-            localStorage.setItem('am_trades_history', JSON.stringify(history));
-
-            showToast(type === 'daily' ? 'Daily Review berhasil disimpan!' : 'Weekly Outlook berhasil disimpan!');
-            form.reset();
-            if (type === 'daily') document.getElementById('daily-date').valueAsDate = new Date();
+            URL.revokeObjectURL(url);
+            showToast('File CSV berhasil didownload!');
         }
 
         function loadHistory() {
